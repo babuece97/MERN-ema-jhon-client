@@ -1,49 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import useProducts from '../../hooks/useProducts';
-import { addToDb, getStoredCart } from '../../utilities/fakedb';
+import useCart from '../../hooks/useCart';
+import { addToDb } from '../../utilities/fakedb';
 import Cart from '../Cart/Cart';
 import Product from '../Product/Product';
 import './Shop.css';
 
 const Shop = () => {
-    const [products, setProducts] = useProducts();
-    const [cart, setCart] = useState([]);
-    const [page,setPage]= useState(0); // for spoting page, NOT array
-    const [size, setSize] = useState(10); // Desired numbers of products to be loaded
-
-        //  PAGE COUNT
+    
+    const [cart, setCart] = useCart();
     const [pageCount, setPageCount] = useState(0);
-    useEffect( () =>{
-        fetch('http://localhost:5000/productCount')
-        .then(res => res.json())
-        .then(data =>{
-            const count = data.count; // here data is obj
-            const pages = Math.ceil(count/15);
-            setPageCount(pages);
-        })
-    }, [])
-    // DATA load with respect to page size
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(10);
+    const [products, setProducts] = useState([]);
+
     useEffect( () =>{
         fetch(`http://localhost:5000/product?page=${page}&size=${size}`)
         .then(res => res.json())
         .then(data => setProducts(data));
     }, [page, size]);
 
-
     useEffect( () =>{
-        const storedCart = getStoredCart();
-        const savedCart = [];
-        for(const id in storedCart){
-            const addedProduct = products.find(product => product._id === id);
-            if(addedProduct){
-                const quantity = storedCart[id];
-                addedProduct.quantity = quantity;
-                savedCart.push(addedProduct);
-            }
-        }
-        setCart(savedCart);
-    }, [products])
+        fetch('http://localhost:5000/productCount')
+        .then(res => res.json())
+        .then(data =>{
+            const count = data.count;
+            const pages = Math.ceil(count/18);
+            setPageCount(pages);
+        })
+    }, [])
+
+    
 
     const handleAddToCart = (selectedProduct) =>{
         console.log(selectedProduct);
@@ -73,22 +60,21 @@ const Shop = () => {
                         handleAddToCart={handleAddToCart}
                         ></Product>)
                 }
-                {/* // BUTTON PAGINATION  */}
                 <div className='pagination'>
-                {
+                    {
                         [...Array(pageCount).keys()]
                         .map(number => <button
                             className={page=== number ? 'selected': ''}
                             onClick={() => setPage(number)}
                         >{number + 1}</button>)
                     }
-              <h3> Items would be showed in a page</h3>
+                    
                     <select onChange={e => setSize(e.target.value)}>
                         <option value="5">5</option>
                         <option value="10" selected>10</option>
                         <option value="15">15</option>
                         <option value="20">20</option>
-                    </select> 
+                    </select>
                 </div>
             </div>
             <div className="cart-container">
